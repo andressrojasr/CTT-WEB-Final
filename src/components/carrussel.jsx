@@ -1,37 +1,10 @@
-import React, { useState, useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
-const slides = [
-  {
-    id: 1,
-    image:
-      "https://picsum.photos/id/1018/1600/600", // reemplaza con tus imágenes
-    title: "¡LA UTA SIGUE CRECIENDO CONTIGO!",
-    subtitle: "Proyectos UTA financiados por el BDE",
-    buttonText: "Conoce los proyectos",
-    buttonLink: "#",
-  },
-  {
-    id: 2,
-    image:
-      "https://picsum.photos/id/1025/1600/600",
-    title: "Innovación y Desarrollo",
-    subtitle: "Impulsando el futuro académico",
-    buttonText: "Descubre más",
-    buttonLink: "#",
-  },
-  {
-    id: 3,
-    image:
-      "https://picsum.photos/id/1041/1600/600",
-    title: "Compromiso con la educación",
-    subtitle: "Construyendo juntos el conocimiento",
-    buttonText: "Explorar",
-    buttonLink: "#",
-  },
-];
+import { useState, useEffect, use } from "react";
 
 
-export default function Carrusel() {
+export default function Carrusel({slides, height= "500px", buttons, marginTop, colorText, background}) {
     const [current, setCurrent] = useState(0);
 
     useEffect(() => {
@@ -40,8 +13,12 @@ export default function Carrusel() {
     }, 5000);
     return () => clearInterval(interval);
     }, []);
+    useEffect(() => {
+        AOS.init({duration: 1000});
+        AOS.refresh();
+    }, []);
   return (
-    <div className="relative w-full h-[500px] overflow-hidden">
+    <div className="relative w-full overflow-hidden" style={{ height: height, marginTop: marginTop }} data-aos="fade-down">
       {slides.map((slide, index) => (
         <div
           key={slide.id}
@@ -55,37 +32,40 @@ export default function Carrusel() {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 flex items-center justify-start bg-black/40">
-            <div className="bg-white p-8 rounded-md ml-16 max-w-lg">
-              <h4 className="text-sm text-red-900 tracking-wider font-semibold">
-                {slide.title}
-              </h4>
-              <h2 className="text-3xl md:text-4xl font-bold text-red-900 mt-2">
-                {slide.subtitle}
-              </h2>
-              <a
-                href={slide.buttonLink}
-                className="inline-block mt-6 bg-yellow-600 text-white px-5 py-2 rounded-md hover:bg-yellow-700 transition"
-              >
-                {slide.buttonText}
-              </a>
+            <div className=" p-8 rounded-md ml-16 max-w-lg" style={{color: colorText, background: background}}>
+              {slide.title && (
+                <h4 className="text-sm tracking-wider font-semibold" data-aos="fade-right">
+                  {slide.title}
+                </h4>
+              )}
+              {slide.subtitle && (
+                <h2 className="text-3xl md:text-4xl font-bold  mt-2" data-aos="fade-right" data-aos-delay="200">
+                  {slide.subtitle}
+                </h2>
+              )}
+              { slide.buttonText && (
+                <button className="mt-6" key={slide.id} data-aos="fade-right" data-aos-delay="400">
+                  {slide.buttonText}
+                </button>
+              )}
             </div>
           </div>
         </div>
       ))}
 
-      {/* Botones de navegación (puntos) */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
+      {buttons && (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
         {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            style={{ backgroundColor: index === current ? 'white' : 'gray' }}
-            className={`w-3 h-3 rounded-full ${
-              index === current ? "bg-white !important": "bg-gray-400 !important"
-            }`}
-          />
-        ))}
-      </div>
+            <button
+              key={index}
+              onClick={() => setCurrent(index)}
+              style={{ backgroundColor: index === current ? 'white' : 'gray' }}
+              className="w-3 h-3 rounded-full"
+            />
+          ))}
+        </div>
+      )}
+      
     </div>
   )
 }

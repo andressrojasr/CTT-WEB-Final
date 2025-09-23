@@ -75,6 +75,19 @@ button.rojo:focus-visible {
   border: 1px solid #6C1313;
   background-color: white;
 }
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE y Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari y Opera */
+}
+
+.NavLink{
+  color: #6C1313;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
