@@ -270,8 +270,8 @@ export default function FilterSidebar({ filters, setFilters }) {
         aria-label="Abrir filtros"
         type="button"
       >
-        <FunnelIcon className="h-5 w-5 text-gray-600" />
-        <span className="text-sm font-medium text-gray-700">Filtros</span>
+        <FunnelIcon className="h-5 w-5 text-white" />
+        <span className="text-sm font-medium text-white">Filtros</span>
       </button>
 
       {/* Sidebar para desktop */}
