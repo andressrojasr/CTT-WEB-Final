@@ -28,7 +28,7 @@ export default function Nav() {
                       to={item.href}
                       className={({ isActive }) =>
                         `font-semibold transition ${
-                          isActive ? "text-[#6C1313] md:text-white border-b-2 border-[#6C1313] md:border-white" : "text-gray-700 md:text-gray-200 hover:text-[#6C1313] md:hover:text-white"
+                          isActive ? "text-[#6C1313] md:text-white border-b-2 border-[#6C1313] md:border-[#CB972D]" : "text-gray-700 md:text-gray-200 hover:text-[#6C1313] md:hover:text-white"
                         }`
                       }
                     >
