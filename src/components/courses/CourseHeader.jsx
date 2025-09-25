@@ -67,19 +67,59 @@ export default function CourseHeader({ course }) {
                     </div>
                 </div>
 
-                {/* Price and Enroll Button */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-center sm:text-left">
-                        <div className="text-3xl font-bold text-[#6C1313]">
-                            ${course.requirements?.prices?.[0]?.amount || 0}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                            {course.requirements?.prices?.[0]?.category || 'Precio base'}
-                        </div>
+                {/* Prices Section */}
+                <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Precios por Categoría</h3>
+                    <div className="space-y-3">
+                        {course.requirements?.prices?.map((price, index) => (
+                            <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-3 h-3 bg-[#6C1313] rounded-full"></div>
+                                    <div>
+                                        <div className="font-medium text-gray-900">
+                                            {price.category}
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            Categoría {index + 1}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-2xl font-bold text-[#6C1313]">
+                                        ${price.amount}
+                                    </div>
+                                    <div className="text-sm text-gray-500">
+                                        USD
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    <button className="bg-[#6C1313] hover:bg-[#5a0f0f] text-white font-bold py-4 px-8 rounded-xl text-lg transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
+
+                    {/* Highlighted Price for Enrollment */}
+                    {course.requirements?.prices?.length > 0 && (
+                        <div className="mt-6 p-4 bg-gradient-to-r from-[#6C1313] to-[#5a0f0f] rounded-xl text-white">
+                            <div className="text-center">
+                                <div className="text-sm opacity-90 mb-1">Precio desde</div>
+                                <div className="text-3xl font-bold">
+                                    ${Math.min(...course.requirements.prices.map(p => p.amount))}
+                                </div>
+                                <div className="text-sm opacity-90 mt-1">
+                                    {course.requirements.prices.find(p => p.amount === Math.min(...course.requirements.prices.map(p => p.amount)))?.category}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Enroll Button */}
+                <div className="text-center">
+                    <button className="bg-[#6C1313] hover:bg-[#5a0f0f] text-white font-bold py-4 px-8 rounded-xl text-lg transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 w-full sm:w-auto">
                         Inscríbete Ahora
                     </button>
+                    <p className="text-sm text-gray-500 mt-2">
+                        Selecciona tu categoría al momento de la inscripción
+                    </p>
                 </div>
             </div>
         </div>
