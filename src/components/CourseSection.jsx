@@ -1,4 +1,4 @@
-import { CpuChipIcon, BuildingLibraryIcon, CommandLineIcon, ComputerDesktopIcon } from "@heroicons/react/24/outline"
+import { CpuChipIcon, BuildingLibraryIcon, CommandLineIcon, ComputerDesktopIcon, Squares2X2Icon } from "@heroicons/react/24/outline"
 import CardCourse from "./CardCourse"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -8,7 +8,8 @@ import { getCourses, getCoursesByCategory } from "../api/api"
 
 
 const categories = [
-    { id: 1, text: 'TICS', icon: ComputerDesktopIcon, status: 'true' },
+    { id: 0, text: 'Todos', icon: Squares2X2Icon, status: 'true' },
+    { id: 1, text: 'TICS', icon: ComputerDesktopIcon, status: 'false' },
     { id: 2, text: 'Educativo', icon: BuildingLibraryIcon, status: 'false' },
     { id: 3, text: 'Software', icon: CommandLineIcon, status: 'false' },
     { id: 4, text: 'Electrónica', icon: CpuChipIcon, status: 'false' },
@@ -20,14 +21,16 @@ export default function CourseSection({ filters }) {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeCategory, setActiveCategory] = useState('TICS');
+    const [activeCategory, setActiveCategory] = useState('Todos');
 
     const loadCourses = async (category = null) => {
         try {
             setLoading(true);
             setError(null);
 
-            const coursesData = category
+            // Si category es null o 'Todos', obtenemos todos los cursos
+            // Si category tiene un valor específico, filtramos por categoría
+            const coursesData = category && category !== 'Todos'
                 ? await getCoursesByCategory(category)
                 : await getCourses();
 
@@ -51,7 +54,9 @@ export default function CourseSection({ filters }) {
 
     const handleCategoryChange = async (category) => {
         setActiveCategory(category);
-        await loadCourses(category);
+        // Si es "Todos", no pasamos categoría para obtener todos los cursos
+        // Si es otra categoría, la pasamos para filtrar
+        await loadCourses(category === 'Todos' ? null : category);
     };
 
     const handleViewMoreCourses = () => {
@@ -124,8 +129,26 @@ export default function CourseSection({ filters }) {
                 )}
 
                 {!loading && !error && courses.length === 0 && (
-                    <div className="flex justify-center items-center mt-10">
-                        <p className="text-gray-500">No se encontraron cursos para la categoría "{activeCategory}"</p>
+                    <div className="flex flex-col justify-center items-center mt-16 mb-12 px-6">
+                        <div className="relative bg-gray-50 rounded-2xl p-8 max-w-md w-full text-center shadow-sm border border-gray-100">
+                            <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl opacity-50"></div>
+                            <div className="relative z-10">
+                                <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25A8.966 8.966 0 0118 3.75c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">
+                                    {activeCategory === 'Todos' ? 'Sin cursos disponibles' : 'Categoría sin cursos'}
+                                </h3>
+                                <p className="text-gray-500 text-sm leading-relaxed">
+                                    {activeCategory === 'Todos'
+                                        ? 'Actualmente no hay cursos disponibles. Te notificaremos cuando se agreguen nuevos contenidos.'
+                                        : `No encontramos cursos para "${activeCategory}". Prueba con otra categoría o revisa más tarde.`
+                                    }
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 )}
                 <div className="m-10 mt-6 flex flex-wrap gap-x-4 gap-y-2" data-aos="fade-right">
