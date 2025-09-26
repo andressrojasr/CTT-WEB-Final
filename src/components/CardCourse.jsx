@@ -29,7 +29,7 @@ export default function CardCourse({
       onClick={handleClick}
     >
       {/* Imagen fija arriba */}
-      <img src={image} alt={title} className="w-full object-cover h-60" />
+      <img src={image} alt={title} className="w-full object-cover h-100" />
 
       {/* Contenido flexible */}
       <div className="p-4 flex flex-col flex-1">
