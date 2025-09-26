@@ -79,12 +79,15 @@ export default function CourseSection({ filters }) {
                                 key={category.id}
                                 style={{
                                     backgroundColor: activeCategory === category.text ? '#6C1313' : '#F5F5F5',
-                                    color: activeCategory === category.text ? 'white' : 'black'
+                                    color: activeCategory === category.text ? 'white' : '#6C1313'
                                 }}
                                 className="flex flex-col items-center justify-center text-center transition-all duration-200 hover:opacity-80"
                                 onClick={() => handleCategoryChange(category.text)}
                                 data-aos="zoom-in">
-                                <category.icon className="h-20 w-20 mb-1" />
+                                <category.icon 
+                                    className={`h-20 w-20 mb-1 ${activeCategory === category.text ? 'text-white' : 'text-[#6C1313]'}`} 
+                                    strokeWidth={0.5} 
+                                />
                                 <span>{category.text}</span>
                             </button>
                         ))}
@@ -154,7 +157,7 @@ export default function CourseSection({ filters }) {
                 )}
                 <div className="m-10 mt-6 flex flex-wrap gap-x-4 gap-y-2" data-aos="fade-right">
                     <button
-                        className="rojo transition-all duration-200 hover:bg-[#5a0f0f] focus:outline-none focus:bg-[#5a0f0f] focus:ring-2 focus:ring-[#6C1313] focus:ring-opacity-50 active:bg-[#4a0c0c]"
+                        className="transition-all duration-200 hover:bg-[#5a0f0f] focus:outline-none focus:bg-[#5a0f0f] focus:ring-2 focus:ring-[#6C1313] focus:ring-opacity-50 active:bg-[#4a0c0c]"
                         onClick={handleViewMoreCourses}
                     >
                         Ver más cursos...
