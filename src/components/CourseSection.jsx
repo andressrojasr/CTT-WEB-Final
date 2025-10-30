@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import AOS from "aos"
 import 'aos/dist/aos.css'
-import { getCourses, getCoursesByCategory } from "../api/api"
+import { getCourses, getCoursesByCategory } from "../api/courses"
 
 
 const categories = [
@@ -29,14 +29,13 @@ export default function CourseSection({ filters }) {
             setLoading(true);
             setError(null);
 
-            // Si category es null o 'Todos', obtenemos todos los cursos
-            // Si category tiene un valor específico, filtramos por categoría
-            const coursesData = category && category !== 'Todos'
-                ? await getCoursesByCategory(category)
-                : await getCourses();
+            // Obtener solo 3 cursos para la sección de inicio
+            const data = category && category !== 'Todos'
+                ? await getCoursesByCategory(category, 1, 3, 'activo')
+                : await getCourses(1, 3, 'activo');
 
-            // Transformar los datos de la API para que coincidan con la estructura esperada por CardCourse
-            const transformedCourses = coursesData.map(course => ({
+            // Transformar los datos de la API
+            const transformedCourses = data.courses.map(course => ({
                 title: course.title,
                 image: course.course_image_detail,
                 isOpen: course.status === 'Activo',

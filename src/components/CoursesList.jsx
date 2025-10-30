@@ -1,43 +1,47 @@
 import CardCourse from "./CardCourse"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import AOS from "aos"
 import 'aos/dist/aos.css'
-import { getCourses, getCoursesByCategory, getCoursesByHoursRange } from "../api/api"
+import { getCourses, getCoursesByCategory, searchCourses } from "../api/courses"
 
 export default function CoursesList({filters}) {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [totalCourses, setTotalCourses] = useState(0);
+    const observer = useRef();
 
     useEffect(() => {
         AOS.init({ duration: 1000, once: false, mirror: true });
         AOS.refresh();
     }, []);
 
-    // Cargar cursos desde la API
-    const loadCourses = async (category = null, duration = null) => {
+    // Cargar cursos desde la API con paginación
+    const loadCourses = async (category = null, searchQuery = null, pageNum = 1, append = false) => {
         try {
-            setLoading(true);
+            if (pageNum === 1) {
+                setLoading(true);
+            }
             setError(null);
 
-            let coursesData;
+            let data;
+            const pageSize = 12; // Cursos por página
 
-            // Si hay filtro de duración específico, usar el endpoint de horas
-            if (duration && duration !== '') {
-                const [minHours, maxHours] = getHoursRange(duration);
-                coursesData = await getCoursesByHoursRange(minHours, maxHours);
+            // Priorizar búsqueda si existe
+            if (searchQuery && searchQuery.trim() !== '') {
+                data = await searchCourses(searchQuery, pageNum, pageSize, 'activo');
             } else if (category && category !== 'Todos') {
-                // Si category tiene un valor específico, filtramos por categoría
-                coursesData = await getCoursesByCategory(category);
+                data = await getCoursesByCategory(category, pageNum, pageSize, 'activo');
             } else {
-                // Obtener todos los cursos
-                coursesData = await getCourses();
+                data = await getCourses(pageNum, pageSize, 'activo');
             }
 
-            // Transformar los datos de la API para que coincidan con la estructura esperada por CardCourse
-            const transformedCourses = coursesData.map(course => ({
+            // Transformar los datos
+            const transformedCourses = data.courses.map(course => ({
                 title: course.title,
-                image: course.course_image,
+                image: course.course_image_detail,
                 isOpen: course.status === 'Activo',
                 hours: course.requirements?.hours?.total?.toString() || '0',
                 description: course.description,
@@ -45,7 +49,14 @@ export default function CoursesList({filters}) {
                 category: course.category
             }));
 
-            setCourses(transformedCourses);
+            if (append) {
+                setCourses(prev => [...prev, ...transformedCourses]);
+            } else {
+                setCourses(transformedCourses);
+            }
+
+            setTotalCourses(data.total || 0);
+            setHasMore(data.courses.length === pageSize && (data.page * pageSize) < data.total);
         } catch (err) {
             setError(err.message);
         } finally {
@@ -53,30 +64,34 @@ export default function CoursesList({filters}) {
         }
     };
 
-    // Convertir el filtro de duración a rango de horas
-    const getHoursRange = (durationFilter) => {
-        switch(durationFilter) {
-            case 'less10':
-                return [0, 9];
-            case '10to19':
-                return [10, 19];
-            case '20to59':
-                return [20, 59];
-            case '60to99':
-                return [60, 99];
-            case '100plus':
-                return [100, 999];
-            default:
-                return [0, 999];
-        }
-    };
+    // Observer para el último elemento
+    const lastCourseElementRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+        
+        if (node) observer.current.observe(node);
+    }, [loading, hasMore]);
 
-    // Cargar cursos cuando cambian los filtros
+    // Cargar más cursos cuando cambia la página
     useEffect(() => {
-        const categoryFilter = filters.category;
-        const durationFilter = filters.duration;
-        loadCourses(categoryFilter, durationFilter);
-    }, [filters.category, filters.duration]);
+        if (page > 1) {
+            loadCourses(filters.category, filters.search, page, true);
+        }
+    }, [page]);
+
+    // Resetear y cargar cursos cuando cambian los filtros
+    useEffect(() => {
+        setPage(1);
+        setCourses([]);
+        setHasMore(true);
+        loadCourses(filters.category, filters.search, 1, false);
+    }, [filters.category, filters.search]);
 
     // Función para verificar si un curso cumple con los filtros de duración (usada para filtrado del lado del cliente)
     const matchesDurationFilter = (courseHours) => {
@@ -100,21 +115,8 @@ export default function CoursesList({filters}) {
         }
     };
 
-    // Función para verificar si un curso cumple con todos los filtros
+    // Función para verificar si un curso cumple con todos los filtros (lado cliente)
     const matchesFilters = (course) => {
-        // Filtro de búsqueda (por título)
-        if (filters.search && !course.title.toLowerCase().includes(filters.search.toLowerCase())) {
-            return false;
-        }
-
-        // Filtro de categorías - Solo aplicar si NO se está usando el endpoint de horas
-        // Cuando se usa el endpoint de horas, el filtrado de categoría ya se hace en el backend
-        if (filters.category && filters.category !== 'Todos' && !filters.duration) {
-            if (filters.category !== course.category) {
-                return false;
-            }
-        }
-
         // Filtro de estado
         if (filters.status) {
             const isOpen = course.isOpen;
@@ -122,7 +124,12 @@ export default function CoursesList({filters}) {
             if (filters.status === 'closed' && isOpen) return false;
         }
 
-        // Filtro de modalidad (si se implementa en el futuro)
+        // Filtro de duración
+        if (filters.duration) {
+            if (!matchesDurationFilter(course.hours)) return false;
+        }
+
+        // Filtro de modalidad
         if (filters.modality) {
             const courseModality = course.requirements?.modality?.toLowerCase() || 'presencial';
             if (filters.modality !== courseModality) {
@@ -138,9 +145,11 @@ export default function CoursesList({filters}) {
 
     return (
         <div className="overflow-hidden bg-white mx-auto max-w-7xl md:px-6 lg:px-8 pt-8" data-aos="fade-down">
-            <h2 className="text-2xl font-semibold text-[#6C1313] ml-6">Cursos</h2>
+            <h2 className="text-2xl font-semibold text-[#6C1313] ml-6">
+                Cursos {totalCourses > 0 && `(${totalCourses})`}
+            </h2>
 
-            {loading && (
+            {loading && page === 1 && (
                 <div className="flex justify-center items-center mt-10">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6C1313]"></div>
                     <span className="ml-3 text-[#6C1313]">Cargando cursos...</span>
@@ -152,7 +161,10 @@ export default function CoursesList({filters}) {
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                         <p>Error al cargar los cursos: {error}</p>
                         <button
-                            onClick={() => loadCourses(filters.category)}
+                            onClick={() => {
+                                setPage(1);
+                                loadCourses(filters.category, filters.search, 1, false);
+                            }}
                             className="mt-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                         >
                             Reintentar
@@ -172,32 +184,55 @@ export default function CoursesList({filters}) {
                                 </svg>
                             </div>
                             <h3 className="text-lg font-medium text-gray-800 mb-2">
-                                {filters.category === 'Todos' || !filters.category ? 'Sin cursos disponibles' : 'Categoría sin cursos'}
+                                {filters.search ? 'Sin resultados' : (filters.category === 'Todos' || !filters.category ? 'Sin cursos disponibles' : 'Categoría sin cursos')}
                             </h3>
                             <p className="text-gray-500 text-sm leading-relaxed">
-                                {filters.category === 'Todos' || !filters.category
-                                    ? 'Actualmente no hay cursos disponibles. Te notificaremos cuando se agreguen nuevos contenidos.'
-                                    : `No encontramos cursos para "${filters.category}". Prueba con otra categoría o revisa más tarde.`
+                                {filters.search
+                                    ? `No encontramos cursos que coincidan con "${filters.search}".`
+                                    : (filters.category === 'Todos' || !filters.category
+                                        ? 'Actualmente no hay cursos disponibles.'
+                                        : `No encontramos cursos para "${filters.category}".`)
                                 }
                             </p>
                         </div>
                     </div>
                 </div>
             ) : (
-                !loading && !error && (
-                    <div className="mt-10 lg:m-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch h-auto">
-                        {filteredCourses.map((course, index) => (
-                            <div data-aos="zoom-in" key={course.id || index} className="inline-block w-full px-6">
-                                <CardCourse
-                                    title={course.title}
-                                    image={course.image}
-                                    isOpen={course.isOpen}
-                                    hours={course.hours}
-                                    id={course.id}
-                                />
+                !error && (
+                    <>
+                        <div className="mt-10 lg:m-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch h-auto">
+                            {filteredCourses.map((course, index) => {
+                                const isLastElement = index === filteredCourses.length - 1;
+                                return (
+                                    <div 
+                                        data-aos="zoom-in" 
+                                        key={course.id || index} 
+                                        className="inline-block w-full px-6"
+                                        ref={isLastElement ? lastCourseElementRef : null}
+                                    >
+                                        <CardCourse
+                                            title={course.title}
+                                            image={course.image}
+                                            isOpen={course.isOpen}
+                                            hours={course.hours}
+                                            id={course.id}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {loading && page > 1 && (
+                            <div className="flex justify-center items-center mt-6 mb-6">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#6C1313]"></div>
+                                <span className="ml-3 text-[#6C1313]">Cargando más cursos...</span>
                             </div>
-                        ))}
-                    </div>
+                        )}
+                        {!hasMore && filteredCourses.length > 0 && (
+                            <div className="text-center mt-6 mb-6 text-gray-500">
+                                No hay más cursos disponibles
+                            </div>
+                        )}
+                    </>
                 )
             )}
         </div>
