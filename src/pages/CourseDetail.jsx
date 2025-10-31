@@ -3,14 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { getCourseById } from "../api/courses";
 import { enrollInCourse } from "../api/inscripciones";
-import CourseHeader from "../components/courses/CourseHeader";
-import CourseContent from "../components/courses/CourseContent";
-import CourseRequirements from "../components/courses/CourseRequirements";
-import CourseSidebar from "../components/courses/CourseSidebar";
-import CourseDates from "../components/courses/CourseDates";
-import CourseObjectives from "../components/courses/CourseObjetives";
-import CourseMaterials from "../components/courses/CourseMaterials";
-import EnrollmentModal from "../components/EnrollmentModal";
+import { CourseHeader, CourseContent, CourseRequirements, CourseSidebar, CourseDates, CourseObjetives, CourseMaterials } from "../components/courses";
+import { EnrollmentModal } from "../components/ui";
 
 export default function CourseDetail() {
     const { id } = useParams();
@@ -179,7 +173,7 @@ export default function CourseDetail() {
                     <div className="lg:col-span-2">
                         <CourseHeader course={course} onEnroll={handleEnroll} enrolling={enrolling} />
                         <CourseDates course={course} />
-                        <CourseObjectives course={course} />
+                        <CourseObjetives course={course} />
                         <CourseContent course={course} />
                         <CourseRequirements course={course} />
                         <CourseMaterials course={course} />

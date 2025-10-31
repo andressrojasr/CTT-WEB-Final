@@ -2,7 +2,7 @@ import CardCourse from "./CardCourse"
 import { useEffect, useState, useRef, useCallback } from "react"
 import AOS from "aos"
 import 'aos/dist/aos.css'
-import { getCourses, getCoursesByCategory, searchCourses } from "../api/courses"
+import { getCourses, getCoursesByCategory, searchCourses } from "../../api/courses"
 
 export default function CoursesList({filters}) {
     const [courses, setCourses] = useState([]);

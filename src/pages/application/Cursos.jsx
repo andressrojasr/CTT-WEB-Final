@@ -3,8 +3,7 @@ import { getCourses, getCoursesByCategory, searchCourses } from "../../api/cours
 import { enrollInCourse } from "../../api/inscripciones";
 import { EyeIcon } from "@heroicons/react/16/solid";
 import { useNavigate, useLocation } from "react-router-dom";
-import Table from "../../components/Table";
-import EnrollmentModal from "../../components/EnrollmentModal";
+import { Table, EnrollmentModal } from "../../components/ui";
 import AOS from "aos";
 import "aos/dist/aos.css";
 

@@ -1,15 +1,9 @@
 import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
+import { dashboardMenuItems } from '../../constants/navigation'
 
 export default function Menu ({ items }) {
   const [isOpen, setIsOpen] = useState(false)
-  
-  const menuItems = [
-    { name: "Cursos", path: "/dashboard/cursos" },
-    { name: "Estudiantes", path: "/dashboard/estudiantes" },
-    { name: "Reportes", path: "/dashboard/reports" },
-    { name: "Configuración", path: "/dashboard/settings" },
-  ];
 
   return (
     <>
@@ -49,7 +43,7 @@ export default function Menu ({ items }) {
 
         {/* Menú dinámico */}
         <nav className="flex-1 p-4 space-y-2">
-          {menuItems.map((item) => (
+          {dashboardMenuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}

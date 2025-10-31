@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { loginComplete } from "../../api/auth"
 import { useNavigate, useLocation } from "react-router-dom"
+import { saveAuthData } from "../../utils/auth"
 
 
 export default function Login () {
@@ -20,9 +21,8 @@ export default function Login () {
       // Llamada al servicio loginComplete() que obtiene token y perfil
       const { token, user } = await loginComplete(email, password);
 
-      // Guardar token y datos del usuario en localStorage
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Guardar token y datos del usuario en localStorage usando la utilidad
+      saveAuthData(token, user);
 
       // Verificar si hay una inscripción pendiente
       const pendingEnrollment = localStorage.getItem('pendingEnrollment');
